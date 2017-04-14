@@ -45,16 +45,17 @@ namespace WindowsFormsApplication1
 
         public bool ReadFile()
         {
-            int count = 0;
             totalValue = 0.0;
             string[] headers;
             string[] fileList;
             Dictionary<string, List<string>> lines = new Dictionary<string, List<String>>();
+
             if (!File.Exists(csvLocation))
             {
                 error += "File does not exist at: " + csvLocation + "\n";
                 return false;
             }
+
             if (wishlistLocation.Length > 0)
             {
                 if (!File.Exists(wishlistLocation))
@@ -74,38 +75,35 @@ namespace WindowsFormsApplication1
                 return false;
             }
 
-                    headers = Regex.Split(fileList[0], ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-                    //Add the headings and their related Lists
-                    for (int i = 0; i < headers.Length; i++)
+            headers = Regex.Split(fileList[0], ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+            //Add the headings and their related Lists
+            for (int i = 0; i < headers.Length; i++)
+            {
+                lines.Add(headers[i], new List<string>());
+            }
+            //Populate the lists
+            //For each Item
+            for (int i = 0; i < fileList.Length; i++)
+            {
+                //Split the item into Columns
+                string[] splitLine = Regex.Split(fileList[i], ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                //Add the relevant item to the heading (ASSUMING THEY ARE ALL THE SAME LENGTH)
+                for (int dictIndex = 0; dictIndex < splitLine.Length; dictIndex++)
+                {
+                    try
                     {
-                        lines.Add(headers[i], new List<string>());
-                    }
-                    //Populate the lists
-                    //For each Item
-                    for (int i = 0; i < fileList.Length; i++)
-                    {
-                        //Split the item into Columns
-                        string[] splitLine = Regex.Split(fileList[i], ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-                        //Add the relevant item to the heading (ASSUMING THEY ARE ALL THE SAME LENGTH)
-                        for (int dictIndex = 0; dictIndex < splitLine.Length; dictIndex++)
-                        {
-                        try
-                        {
-                            if (lines[headers[dictIndex]] == null)
-                                break;
-                        }
-                        catch (Exception e)
-                        {
+                        if (lines[headers[dictIndex]] == null)
                             break;
-                        }
-                            
-                        //Get the headings string to minimise shenanigans
-                        lines[headers[dictIndex]].Add(splitLine[dictIndex]);
-                        }
                     }
-                
-
-            
+                    catch (Exception e)
+                    {
+                        break;
+                    }
+                        
+                    //Get the headings string to minimise shenanigans
+                    lines[headers[dictIndex]].Add(splitLine[dictIndex]);
+                }
+            }
 
             //Parse Headers
             if (ParseHeadings(lines) == false)
@@ -131,29 +129,35 @@ namespace WindowsFormsApplication1
 
         public bool PrintCards()
         {
+            StreamWriter sw = null;
             double value = 0.0;
             bool completed = true;
-            StreamWriter sw;
-            if (File.Exists(outputLocation))
-                File.Delete(outputLocation);
 
-            sw = new StreamWriter(outputLocation);
-
-            if (File.Exists(wishlistLocation))
-                AppendWishlist();
-
-            output += "WTS/WTT\n";
-
-            foreach (Card c in cards)
-            {
-                if (c.PriceAU > minValue)
-                {
-                    value += c.PriceAU;
-                    output += c.ToString() + "\n";
-                }
-            }
             try
             {
+                //Why update when you can just nuke and rebuild?
+                if (File.Exists(outputLocation))
+                    File.Delete(outputLocation);
+
+                //Add the Wishlist if it exists
+                if (wishlistLocation != "" && File.Exists(wishlistLocation))
+                    AppendWishlist();
+
+                //So they know that this is what we're selling
+                output += "WTS/WTT\n";
+
+                //Loop through and add the additional cards
+                foreach (Card c in cards)
+                {
+                    if (c.PriceAU > minValue)
+                    {
+                        value += c.PriceAU;
+                        output += c.ToString() + "\n";
+                    }
+                }
+
+                //Open and write to the output file
+                sw = new StreamWriter(outputLocation);
                 sw.WriteLine(output);
             } catch (Exception e)
             {
@@ -162,7 +166,8 @@ namespace WindowsFormsApplication1
                 Console.WriteLine(e.ToString());
             } finally
             {
-                sw.Close();
+                if (sw != null)
+                    sw.Close();
             }
             return completed;
         }
@@ -170,13 +175,11 @@ namespace WindowsFormsApplication1
         private bool AppendWishlist()
         {
             bool completed = true;
-            StreamReader sr;
-            if (wishlistLocation.Length == 0)
-                return completed;
+            StreamReader sr = null;
 
-            sr = new StreamReader(wishlistLocation);
             try
             {
+                sr = new StreamReader(wishlistLocation);
                 while (!sr.EndOfStream)
                 {
                     output += sr.ReadLine() + "\n";
@@ -189,7 +192,8 @@ namespace WindowsFormsApplication1
                 completed = false;
             } finally
             {
-                sr.Close();
+                if (sr != null)
+                    sr.Close();
             }
             return completed;
         }
