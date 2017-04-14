@@ -34,7 +34,7 @@ namespace WindowsFormsApplication1
             }
         }
 
-        public Card(string _count, string _foil, string _name, string _price, string _edition, double _exchangeMultiplier, double _percentMultiplier, string _condition, string _language)
+        public Card(string _count, string _name, string _edition, string _condition, string _language, string _foil,  string _price,  double _exchangeMultiplier, double _percentMultiplier)
         {
             Int32.TryParse(_count, out count);
             foil = (_foil.Contains("foil")) ? true : false;
@@ -42,29 +42,11 @@ namespace WindowsFormsApplication1
             name = name.Replace("\"", string.Empty);
             if (_price[0] == '$')
                 _price = _price.Remove(0, 1);
-            Double.TryParse(_price, out price);
-            percentMultiplier = _percentMultiplier;
-            priceAU = price * _exchangeMultiplier * percentMultiplier;
-            priceAU = Math.Round(priceAU, 2);
-            edition = _edition;
-            language = _language;
-            condition = _condition;
-        }
-
-        public Card(string _count, string _foil, string _name, string _price, string _edition, double _exchangeMultiplier, double _percentMultiplier, string _condition, string _language, string _myPrice)
-        {
-            Int32.TryParse(_count, out count);
-            foil = (_foil.Contains("foil")) ? true : false;
-            name = _name;
-            name = name.Replace("\"", string.Empty);
-            if (_price[0] == '$')
-                _price = _price.Remove(0, 1);
-            Double.TryParse(_price, out price);
+            Double.TryParse(_price, out priceAU);
             percentMultiplier = _percentMultiplier;
             edition = _edition;
             language = _language;
             condition = _condition;
-            Double.TryParse(_myPrice, out priceAU);
             priceAU = priceAU / 100;
             priceAU = priceAU * _exchangeMultiplier * percentMultiplier;
             priceAU = Math.Round(priceAU, 2);

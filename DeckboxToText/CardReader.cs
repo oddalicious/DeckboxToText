@@ -13,7 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using LumenWorks.Framework.IO.Csv;
+using System.Text.RegularExpressions;
 
 namespace WindowsFormsApplication1
 {
@@ -25,7 +25,7 @@ namespace WindowsFormsApplication1
         public double totalValue = 0.0;
 
         private List<Card> cards;
-        private int countCol = -1, foilCol = -1, nameCol = -1, priceCol = -1, editionCol = -1, conditionCol = -1, languageCol = -1, myPriceCol = -1;
+        private string headers;
         private string wishlistLocation = "", outputLocation = "", csvLocation = "";
         private double percentMultiplier = 1.0, UStoAUDMultiplier = 1.3, minValue = 0.0, maxValue = 9999.00;
 
@@ -45,87 +45,88 @@ namespace WindowsFormsApplication1
 
         public bool ReadFile()
         {
-            CsvReader reader;
-
             int count = 0;
             totalValue = 0.0;
-
+            string[] headers;
+            string[] fileList;
+            Dictionary<string, List<string>> lines = new Dictionary<string, List<String>>();
             if (!File.Exists(csvLocation))
             {
                 error += "File does not exist at: " + csvLocation + "\n";
                 return false;
             }
             if (wishlistLocation.Length > 0)
+            {
                 if (!File.Exists(wishlistLocation))
                 {
                     error += "Wishlist does not exist at: " + wishlistLocation + "\n";
                     return false;
                 }
+            }
+            
             try
             {
-                reader = new CsvReader(new StreamReader(csvLocation), true);
-            } catch (Exception e)
+                fileList = File.ReadAllLines(csvLocation);
+            }
+            catch (Exception e)
             {
-                error += "CSV file is in use or is invalid, please ensure that the file is not in use or of an invalid type. ERROR BELOW:\n\n";
-                error += e + "\n\n";
+                error += "Error has occured opening the CSV";
                 return false;
             }
-            string[] headers = reader.GetFieldHeaders();
+
+                    headers = Regex.Split(fileList[0], ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                    //Add the headings and their related Lists
+                    for (int i = 0; i < headers.Length; i++)
+                    {
+                        lines.Add(headers[i], new List<string>());
+                    }
+                    //Populate the lists
+                    //For each Item
+                    for (int i = 0; i < fileList.Length; i++)
+                    {
+                        //Split the item into Columns
+                        string[] splitLine = Regex.Split(fileList[i], ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                        //Add the relevant item to the heading (ASSUMING THEY ARE ALL THE SAME LENGTH)
+                        for (int dictIndex = 0; dictIndex < splitLine.Length; dictIndex++)
+                        {
+                        try
+                        {
+                            if (lines[headers[dictIndex]] == null)
+                                break;
+                        }
+                        catch (Exception e)
+                        {
+                            break;
+                        }
+                            
+                        //Get the headings string to minimise shenanigans
+                        lines[headers[dictIndex]].Add(splitLine[dictIndex]);
+                        }
+                    }
+                
+
+            
 
             //Parse Headers
-            if (ParseHeadings(headers) == false)
+            if (ParseHeadings(lines) == false)
             {
-                reader.Dispose();
                 return false;
             }
 
-            if (useMyPrice && myPriceCol == -1)
+            for (int i = 0; i < lines[headers[0]].Count; i++)
             {
-                error += "My Price Column not assigned, did you select \"Price\" as an additional column? \n";
-                reader.Dispose();
-                return false;
-            }
-
-            //Create new cards
-            while (reader.ReadNextRecord())
-            {
-                try
+                Card c = new Card(lines["Count"][i], lines["Name"][i], lines["Edition"][i], lines["Condition"][i], lines["Language"][i], lines["Foil"][i], useMyPrice ? lines["My Price"][i] : lines["Price"][i], UStoAUDMultiplier, percentMultiplier);
+                if (c.PriceAU >= minValue && c.PriceAU < maxValue)
                 {
-                    string[] line = new string[reader.FieldCount];
-                    reader.CopyCurrentRecordTo(line, 0);
-                    CreateCard(line);
-                    count++;
-                } catch (Exception ex)
-                {
-                    error += "Card creation failed: Line + " + (count + 1) + "\n";
-                    error += ex.ToString();
-                    reader = null;
-                    return false;
+                    totalValue += c.PriceAU;
+                    cards.Add(c);
                 }
             }
-
-            reader.Dispose();
 
             //Order the cards by price, descending
             cards = cards.Where(n => n.PriceAU > 0.0).ToList();
             cards = cards.OrderByDescending(n => n.PriceAU).ToList();
             return true;
-        }
-
-        private void CreateCard(string[] input)
-        {
-            Card card;
-
-            if (useMyPrice)
-                card = new Card(input[countCol], input[foilCol], input[nameCol], input[priceCol], input[editionCol], UStoAUDMultiplier, percentMultiplier, input[conditionCol], input[languageCol], input[myPriceCol]);
-            else
-                card = new Card(input[countCol], input[foilCol], input[nameCol], input[priceCol], input[editionCol], UStoAUDMultiplier, percentMultiplier, input[conditionCol], input[languageCol]);
-            if (card.PriceAU >= minValue && card.PriceAU <= maxValue)
-            {
-                totalValue += card.PriceAU;
-                cards.Add(card);
-            }
-
         }
 
         public bool PrintCards()
@@ -146,8 +147,10 @@ namespace WindowsFormsApplication1
             foreach (Card c in cards)
             {
                 if (c.PriceAU > minValue)
+                {
                     value += c.PriceAU;
-                output += c.ToString() + "\n";
+                    output += c.ToString() + "\n";
+                }
             }
             try
             {
@@ -191,67 +194,50 @@ namespace WindowsFormsApplication1
             return completed;
         }
 
-        private bool ParseHeadings(string[] columnNames)
+        private bool ParseHeadings(Dictionary<string,List<String>> cardList)
         {
-            bool completed = true;
-
-            for (int i = 0; i < columnNames.Length; i++)
-            {
-                if (columnNames[i].Equals("Count"))
-                    countCol = i;
-                if (columnNames[i].Equals("Name"))
-                    nameCol = i;
-                if (columnNames[i].Equals("Foil"))
-                    foilCol = i;
-                if (columnNames[i].Equals("My Price") && useMyPrice)
-                    myPriceCol = i;
-                if (columnNames[i].Equals("Price"))
-                    priceCol = i;
-                if (columnNames[i].Equals("Edition"))
-                    editionCol = i;
-                if (columnNames[i].Equals("Language"))
-                    languageCol = i;
-                if (columnNames[i].Equals("Condition"))
-                    conditionCol = i;
-            }
-
-            if (countCol == -1)
+            if (cardList["Count"] == null)
             {
                 error += "Count Column not assigned \n";
-                completed = false;
-            }
-            if (nameCol == -1)
+                return false;
+            } 
+            if (cardList["Name"] == null)
             {
                 error += "Name Column not assigned \n";
-                completed = false;
+                return false;
             }
-            if (foilCol == -1)
+            if (cardList["Foil"] == null)
             {
                 error += "Foil Column not assigned \n";
-                completed = false;
+                return false;
             }
-            if (priceCol == -1)
+            if (cardList["My Price"] == null && useMyPrice)
+            {
+                error += "My Price Column not assigned \n";
+                return false;
+            }
+            if (cardList["Price"] == null)
             {
                 error += "Price Column not assigned \n";
-                completed = false;
+                return false;
             }
-            if (editionCol == -1)
+            if (cardList["Edition"] == null)
             {
-                error += "Edition Column not assigned \n";
-                completed = false;
+                error += "Edition Column not assigned \n";      
+                return false;
             }
-            if (languageCol == -1)
+            if (cardList["Language"] == null)
             {
                 error += "Language Column not assigned \n";
-                completed = false;
+                return false;
             }
-            if (conditionCol == -1)
+            if (cardList["Condition"] == null)
             {
                 error += "Condition Column not assigned \n";
-                completed = false;
+                return false;
             }
-
-            return completed;
+            return true;
         }
     }
+
 }
