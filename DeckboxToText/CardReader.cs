@@ -82,24 +82,16 @@ namespace WindowsFormsApplication1
                 lines.Add(headers[i], new List<string>());
             }
             //Populate the lists
-            //For each Item
-            for (int i = 0; i < fileList.Length; i++)
+            //For each Item - Begin at 1 to prevent headings being included
+            for (int i = 1; i < fileList.Length; i++)
             {
                 //Split the item into Columns
                 string[] splitLine = Regex.Split(fileList[i], ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                if (splitLine[0] == null || splitLine[0] == "")
+                    continue;
                 //Add the relevant item to the heading (ASSUMING THEY ARE ALL THE SAME LENGTH)
                 for (int dictIndex = 0; dictIndex < splitLine.Length; dictIndex++)
                 {
-                    try
-                    {
-                        if (lines[headers[dictIndex]] == null)
-                            break;
-                    }
-                    catch (Exception e)
-                    {
-                        break;
-                    }
-                        
                     //Get the headings string to minimise shenanigans
                     lines[headers[dictIndex]].Add(splitLine[dictIndex]);
                 }
@@ -113,7 +105,7 @@ namespace WindowsFormsApplication1
 
             for (int i = 0; i < lines[headers[0]].Count; i++)
             {
-                Card c = new Card(lines["Count"][i], lines["Name"][i], lines["Edition"][i], lines["Condition"][i], lines["Language"][i], lines["Foil"][i], useMyPrice ? lines["My Price"][i] : lines["Price"][i], UStoAUDMultiplier, percentMultiplier);
+                Card c = new Card(lines["Count"][i], lines["Name"][i], lines["Edition"][i], lines["Condition"][i], lines["Language"][i], lines["Foil"][i], useMyPrice ? lines["My Price"][i] : lines["Price"][i], UStoAUDMultiplier, percentMultiplier, useMyPrice);
                 if (c.PriceAU >= minValue && c.PriceAU < maxValue)
                 {
                     totalValue += c.PriceAU;

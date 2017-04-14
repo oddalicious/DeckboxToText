@@ -34,7 +34,7 @@ namespace WindowsFormsApplication1
             }
         }
 
-        public Card(string _count, string _name, string _edition, string _condition, string _language, string _foil,  string _price,  double _exchangeMultiplier, double _percentMultiplier)
+        public Card(string _count, string _name, string _edition, string _condition, string _language, string _foil,  string _price,  double _exchangeMultiplier, double _percentMultiplier, bool useMyPrice)
         {
             Int32.TryParse(_count, out count);
             foil = (_foil.Contains("foil")) ? true : false;
@@ -47,7 +47,8 @@ namespace WindowsFormsApplication1
             edition = _edition;
             language = _language;
             condition = _condition;
-            priceAU = priceAU / 100;
+            if (useMyPrice)
+                priceAU /= 100;
             priceAU = priceAU * _exchangeMultiplier * percentMultiplier;
             priceAU = Math.Round(priceAU, 2);
         }
