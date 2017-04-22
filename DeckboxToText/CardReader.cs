@@ -25,11 +25,12 @@ namespace WindowsFormsApplication1
         public double totalValue = 0.0;
 
         private List<Card> cards;
+        private bool nearestHalf;
         private string headers;
         private string wishlistLocation = "", outputLocation = "", csvLocation = "";
         private double percentMultiplier = 1.0, UStoAUDMultiplier = 1.3, minValue = 0.0, maxValue = 9999.00;
 
-        public CardReader(string _csvLocation, string _wishListLocation, string _outputLocation, double _percentMultiplier = 1.0, double _UStoAUDMultiplier = 1.0, double _minValue = 0.25, double _maxValue = 9999.00)
+        public CardReader(string _csvLocation, string _wishListLocation, string _outputLocation, double _percentMultiplier = 1.0, double _UStoAUDMultiplier = 1.0, double _minValue = 0.25, double _maxValue = 9999.00, bool _nearestHalf = false)
         {
             csvLocation = _csvLocation;
             wishlistLocation = _wishListLocation;
@@ -41,6 +42,7 @@ namespace WindowsFormsApplication1
             cards = new List<Card>();
             minValue = _minValue;
             maxValue = _maxValue;
+            nearestHalf = _nearestHalf;
         }
 
         public bool ReadFile()
@@ -105,7 +107,7 @@ namespace WindowsFormsApplication1
 
             for (int i = 0; i < lines[headers[0]].Count; i++)
             {
-                Card c = new Card(lines["Count"][i], lines["Name"][i], lines["Edition"][i], lines["Condition"][i], lines["Language"][i], lines["Foil"][i], useMyPrice ? lines["My Price"][i] : lines["Price"][i], UStoAUDMultiplier, percentMultiplier, useMyPrice);
+                Card c = new Card(lines["Count"][i], lines["Name"][i], lines["Edition"][i], lines["Condition"][i], lines["Language"][i], lines["Foil"][i], useMyPrice ? lines["My Price"][i] : lines["Price"][i], UStoAUDMultiplier, percentMultiplier, useMyPrice, nearestHalf);
                 if (c.PriceAU >= minValue && c.PriceAU < maxValue)
                 {
                     totalValue += c.PriceAU;

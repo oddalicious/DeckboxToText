@@ -51,10 +51,12 @@
             this.textTotalValue = new System.Windows.Forms.TextBox();
             this.labelTotalValue = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.labelRangeMax = new System.Windows.Forms.Label();
-            this.labelRangeMin = new System.Windows.Forms.Label();
-            this.textRangeMax = new System.Windows.Forms.TextBox();
             this.textRangeMin = new System.Windows.Forms.TextBox();
+            this.textRangeMax = new System.Windows.Forms.TextBox();
+            this.labelRangeMin = new System.Windows.Forms.Label();
+            this.labelRangeMax = new System.Windows.Forms.Label();
+            this.boolNearestFifty = new System.Windows.Forms.CheckBox();
+            this.label2 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -62,7 +64,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(161, 270);
+            this.label1.Location = new System.Drawing.Point(170, 293);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(145, 13);
             this.label1.TabIndex = 0;
@@ -71,7 +73,7 @@
             // linkTwitter
             // 
             this.linkTwitter.AutoSize = true;
-            this.linkTwitter.Location = new System.Drawing.Point(312, 270);
+            this.linkTwitter.Location = new System.Drawing.Point(321, 293);
             this.linkTwitter.Name = "linkTwitter";
             this.linkTwitter.Size = new System.Drawing.Size(39, 13);
             this.linkTwitter.TabIndex = 1;
@@ -138,6 +140,8 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.label2);
+            this.groupBox1.Controls.Add(this.boolNearestFifty);
             this.groupBox1.Controls.Add(this.boolOpenFile);
             this.groupBox1.Controls.Add(this.labelLoadAfter);
             this.groupBox1.Controls.Add(this.boolMyPrice);
@@ -148,7 +152,7 @@
             this.groupBox1.Controls.Add(this.labelUSMultiplier);
             this.groupBox1.Location = new System.Drawing.Point(12, 116);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(230, 112);
+            this.groupBox1.Size = new System.Drawing.Size(230, 132);
             this.groupBox1.TabIndex = 8;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Options";
@@ -234,7 +238,7 @@
             // 
             this.buttonCreateOutput.Enabled = false;
             this.buttonCreateOutput.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonCreateOutput.Location = new System.Drawing.Point(12, 260);
+            this.buttonCreateOutput.Location = new System.Drawing.Point(12, 288);
             this.buttonCreateOutput.Name = "buttonCreateOutput";
             this.buttonCreateOutput.Size = new System.Drawing.Size(75, 23);
             this.buttonCreateOutput.TabIndex = 9;
@@ -244,7 +248,7 @@
             // 
             // textTotalValue
             // 
-            this.textTotalValue.Location = new System.Drawing.Point(135, 234);
+            this.textTotalValue.Location = new System.Drawing.Point(135, 254);
             this.textTotalValue.Name = "textTotalValue";
             this.textTotalValue.Size = new System.Drawing.Size(100, 20);
             this.textTotalValue.TabIndex = 8;
@@ -253,7 +257,7 @@
             // labelTotalValue
             // 
             this.labelTotalValue.AutoSize = true;
-            this.labelTotalValue.Location = new System.Drawing.Point(19, 237);
+            this.labelTotalValue.Location = new System.Drawing.Point(19, 257);
             this.labelTotalValue.Name = "labelTotalValue";
             this.labelTotalValue.Size = new System.Drawing.Size(61, 13);
             this.labelTotalValue.TabIndex = 8;
@@ -267,37 +271,10 @@
             this.groupBox2.Controls.Add(this.labelRangeMax);
             this.groupBox2.Location = new System.Drawing.Point(241, 116);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(114, 112);
+            this.groupBox2.Size = new System.Drawing.Size(114, 70);
             this.groupBox2.TabIndex = 8;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Range";
-            // 
-            // labelRangeMax
-            // 
-            this.labelRangeMax.AutoSize = true;
-            this.labelRangeMax.Location = new System.Drawing.Point(7, 24);
-            this.labelRangeMax.Name = "labelRangeMax";
-            this.labelRangeMax.Size = new System.Drawing.Size(27, 13);
-            this.labelRangeMax.TabIndex = 8;
-            this.labelRangeMax.Text = "Max";
-            // 
-            // labelRangeMin
-            // 
-            this.labelRangeMin.AutoSize = true;
-            this.labelRangeMin.Location = new System.Drawing.Point(10, 46);
-            this.labelRangeMin.Name = "labelRangeMin";
-            this.labelRangeMin.Size = new System.Drawing.Size(24, 13);
-            this.labelRangeMin.TabIndex = 9;
-            this.labelRangeMin.Text = "Min";
-            // 
-            // textRangeMax
-            // 
-            this.textRangeMax.Location = new System.Drawing.Point(40, 21);
-            this.textRangeMax.Name = "textRangeMax";
-            this.textRangeMax.Size = new System.Drawing.Size(66, 20);
-            this.textRangeMax.TabIndex = 8;
-            this.textRangeMax.Text = "9999.99";
-            this.textRangeMax.TextChanged += new System.EventHandler(this.textRangeMax_TextChanged);
             // 
             // textRangeMin
             // 
@@ -308,11 +285,57 @@
             this.textRangeMin.Text = "0.25";
             this.textRangeMin.TextChanged += new System.EventHandler(this.textRangeMin_TextChanged);
             // 
+            // textRangeMax
+            // 
+            this.textRangeMax.Location = new System.Drawing.Point(40, 21);
+            this.textRangeMax.Name = "textRangeMax";
+            this.textRangeMax.Size = new System.Drawing.Size(66, 20);
+            this.textRangeMax.TabIndex = 8;
+            this.textRangeMax.Text = "9999.99";
+            this.textRangeMax.TextChanged += new System.EventHandler(this.textRangeMax_TextChanged);
+            // 
+            // labelRangeMin
+            // 
+            this.labelRangeMin.AutoSize = true;
+            this.labelRangeMin.Location = new System.Drawing.Point(10, 46);
+            this.labelRangeMin.Name = "labelRangeMin";
+            this.labelRangeMin.Size = new System.Drawing.Size(24, 13);
+            this.labelRangeMin.TabIndex = 9;
+            this.labelRangeMin.Text = "Min";
+            // 
+            // labelRangeMax
+            // 
+            this.labelRangeMax.AutoSize = true;
+            this.labelRangeMax.Location = new System.Drawing.Point(7, 24);
+            this.labelRangeMax.Name = "labelRangeMax";
+            this.labelRangeMax.Size = new System.Drawing.Size(27, 13);
+            this.labelRangeMax.TabIndex = 8;
+            this.labelRangeMax.Text = "Max";
+            // 
+            // boolNearestFifty
+            // 
+            this.boolNearestFifty.AutoSize = true;
+            this.boolNearestFifty.Location = new System.Drawing.Point(123, 106);
+            this.boolNearestFifty.Name = "boolNearestFifty";
+            this.boolNearestFifty.Size = new System.Drawing.Size(15, 14);
+            this.boolNearestFifty.TabIndex = 8;
+            this.boolNearestFifty.UseVisualStyleBackColor = true;
+            this.boolNearestFifty.CheckedChanged += new System.EventHandler(this.boolNearestFifty_CheckedChanged);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(7, 106);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(98, 13);
+            this.label2.TabIndex = 9;
+            this.label2.Text = "Round Closest Half";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(360, 283);
+            this.ClientSize = new System.Drawing.Size(364, 315);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.labelTotalValue);
             this.Controls.Add(this.textTotalValue);
@@ -367,6 +390,8 @@
         private System.Windows.Forms.TextBox textRangeMax;
         private System.Windows.Forms.Label labelRangeMin;
         private System.Windows.Forms.Label labelRangeMax;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.CheckBox boolNearestFifty;
     }
 }
 

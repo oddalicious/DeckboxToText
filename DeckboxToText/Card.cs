@@ -34,7 +34,7 @@ namespace WindowsFormsApplication1
             }
         }
 
-        public Card(string _count, string _name, string _edition, string _condition, string _language, string _foil,  string _price,  double _exchangeMultiplier, double _percentMultiplier, bool useMyPrice)
+        public Card(string _count, string _name, string _edition, string _condition, string _language, string _foil,  string _price,  double _exchangeMultiplier, double _percentMultiplier, bool useMyPrice, bool nearestHalf)
         {
             Int32.TryParse(_count, out count);
             foil = (_foil.Contains("foil")) ? true : false;
@@ -50,7 +50,16 @@ namespace WindowsFormsApplication1
             if (useMyPrice)
                 priceAU /= 100;
             priceAU = priceAU * _exchangeMultiplier * percentMultiplier;
-            priceAU = Math.Round(priceAU, 2);
+            //ROUND TO NEAREST .5
+            if (nearestHalf)
+            {
+                priceAU *= 2;
+                priceAU = Math.Round(priceAU, MidpointRounding.AwayFromZero) / 2;
+            }
+            else
+            {
+                priceAU = Math.Round(priceAU, 2);
+            }
         }
 
         public override string ToString()

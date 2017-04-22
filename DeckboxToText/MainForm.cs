@@ -24,6 +24,7 @@ namespace WindowsFormsApplication1
         double gainMultiplier = 0.0;
         double minValue = 0.25;
         double maxValue = 9999.00;
+        bool nearestHalf = false;
 
         bool useMyPrice = false;
         OpenFileDialog fDialog;
@@ -142,7 +143,7 @@ namespace WindowsFormsApplication1
             if (outputLocation == "")
                 outputLocation = fDialog.InitialDirectory + "/output.txt";
             if (gainMultiplier != 0.0 && uStoAUDMultiplier != 0.0)
-                reader = new CardReader(csvLocation, wishlistLocation, outputLocation, gainMultiplier, uStoAUDMultiplier, minValue, maxValue);
+                reader = new CardReader(csvLocation, wishlistLocation, outputLocation, gainMultiplier, uStoAUDMultiplier, minValue, maxValue, nearestHalf);
             reader.useMyPrice = useMyPrice;
         }
 
@@ -229,6 +230,11 @@ namespace WindowsFormsApplication1
             {
                 MessageBox.Show("Maximum Value must be higher than Minimum Value");
             }
+        }
+
+        private void boolNearestFifty_CheckedChanged(object sender, EventArgs e)
+        {
+            nearestHalf = boolNearestFifty.Checked;
         }
     }
 }
