@@ -13,68 +13,94 @@ using System;
 
 namespace WindowsFormsApplication1
 {
-    class Card
+    internal class Card
     {
 
-        private int count;
-        private bool foil;
-        private String name;
-        private double price;
-        private double priceAU;
-        private string edition;
-        private double percentMultiplier = 1.0;
-        private string condition;
-        private string language;
+        private readonly int _count;
+        private readonly bool _foil;
+        private readonly string _name;
+        private double _price;
+        private readonly double _priceAus;
+        private readonly string _edition;
+        private readonly string _condition;
+        private readonly string _language;
+        private readonly string _cardNo;
 
-        public double PriceAU
-        {
-            get
-            {
-                return priceAU;
-            }
-        }
+        public double PriceAus => _priceAus;
 
-        public Card(string _count, string _name, string _edition, string _condition, string _language, string _foil,  string _price,  double _exchangeMultiplier, double _percentMultiplier, bool useMyPrice, bool nearestHalf)
+        public double TotalPriceAus => _priceAus * _count;
+
+        public Card(string count, string name, string edition, string condition, string language, string foil,  string price,  double exchangeMultiplier, double percentMultiplier, bool useMyPrice, bool nearestHalf, string cardNo)
         {
-            Int32.TryParse(_count, out count);
-            foil = (_foil.Contains("foil")) ? true : false;
-            name = _name;
-            name = name.Replace("\"", string.Empty);
-            if (_price[0] == '$')
-                _price = _price.Remove(0, 1);
-            Double.TryParse(_price, out priceAU);
-            percentMultiplier = _percentMultiplier;
-            edition = _edition;
-            language = _language;
-            condition = _condition;
+            int.TryParse(count, out _count);
+            _foil = foil.Contains("foil");
+            _name = name;
+            _name = _name.Replace("\"", string.Empty);
+            if (price[0] == '$')
+                price = price.Remove(0, 1);
+            double.TryParse(price, out _priceAus);
+            _edition = edition;
+            _language = language;
+            _condition = condition;
             if (useMyPrice)
-                priceAU /= 100;
-            priceAU = priceAU * _exchangeMultiplier * percentMultiplier;
+                _priceAus /= 100;
+            _priceAus = _priceAus * exchangeMultiplier * percentMultiplier;
             //ROUND TO NEAREST .5
             if (nearestHalf)
             {
-                priceAU *= 2;
-                priceAU = Math.Round(priceAU, MidpointRounding.AwayFromZero) / 2;
+                _priceAus *= 2;
+                _priceAus = Math.Round(_priceAus, MidpointRounding.AwayFromZero) / 2;
             }
             else
             {
-                priceAU = Math.Round(priceAU, 2);
+                _priceAus = Math.Round(_priceAus, 2);
             }
+            _cardNo = cardNo;
         }
 
         public override string ToString()
         {
-            string output = "" + count + " ";
-            output += (foil) ? "FOIL " : "";
-            output += name + " ";
-            output += "(" + edition;
-            output += (condition.Equals("Near Mint")) ? "" : " - " + condition;
-            output += (language.Equals("English")) ? "" : " - " + language;
+            var output = "" + _count + " ";
+            output += (_foil) ? "FOIL " : "";
+            output += _name + " ";
+            output += IsBasicLand() ? "#" + _cardNo + " " : "";
+            output += "(" + _edition;
+            output += (_condition.Equals("Near Mint")) ? "" : " - " + _condition;
+            output += (_language.Equals("English")) ? "" : " - " + _language;
             output += ") ";
             output += "$";
-            output += priceAU.ToString();
-            output += (count > 1) ? "ea" : "";
+            output += _priceAus;
+            output += (_count > 1) ? "ea" : "";
             return output;
+        }
+
+        private bool IsBasicLand()
+        {
+            if (_name.CompareTo("Plains") == 0)
+            {
+                return true;
+            }
+            else if (_name.CompareTo("Island") == 0)
+            {
+                return true;
+            }
+            else if (_name.CompareTo("Swamp") == 0)
+            {
+                return true;
+            }
+            else if (_name.CompareTo("Mountain") == 0)
+            {
+                return true;
+            }
+            else if (_name.CompareTo("Forest") == 0)
+            {
+                return true;
+            }
+            else if (_name.CompareTo("Wastes") == 0)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

@@ -17,35 +17,34 @@ namespace WindowsFormsApplication1
 {
     public partial class MainForm : Form
     {
-        string wishlistLocation = "";
-        string outputLocation = "";
-        string csvLocation = "";
-        double uStoAUDMultiplier = 0.0;
-        double gainMultiplier = 0.0;
-        double minValue = 0.25;
-        double maxValue = 9999.00;
-        bool nearestHalf = false;
+        private string _wishlistLocation = "";
+        private string _outputLocation = "";
+        private string _csvLocation = "";
+        private double _uStoAudMultiplier;
+        private double _gainMultiplier;
+        private double _minValue = 0.25;
+        private double _maxValue = 9999.00;
+        private bool _nearestHalf;
 
-        bool useMyPrice = false;
-        OpenFileDialog fDialog;
-        CardReader reader;
+        private bool _useMyPrice;
+        private OpenFileDialog _fDialog;
+        private CardReader _reader;
 
         public MainForm()
         {
             InitializeComponent();
         }
 
-        private void Form1_Load(object sender, System.EventArgs e)
+        private void Form1_Load(object sender, EventArgs e)
         {
             //Link the LinkLabels
-            LinkLabel.Link link = new LinkLabel.Link();
-            link.LinkData = "https://www.twitter.com/0dd3sy/";
+            LinkLabel.Link link = new LinkLabel.Link {LinkData = "https://www.twitter.com/0dd3sy/"};
             linkTwitter.Links.Add(link);
 
             //Parse the options
             ParseGains();
             ParseConversionRate();
-            useMyPrice = boolMyPrice.Checked;
+            _useMyPrice = boolMyPrice.Checked;
 
             //Create Tooltips
             toolTip.SetToolTip(labelOwnMultiplier, "Modify the eventual price, default 1.3");
@@ -61,7 +60,7 @@ namespace WindowsFormsApplication1
         {
             try
             {
-                Process.Start(e.Link.LinkData as string);
+                if (e != null) Process.Start((string) e.Link.LinkData);
             } catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString());
@@ -70,171 +69,190 @@ namespace WindowsFormsApplication1
 
         private void buttonTarget_Click(object sender, EventArgs e)
         {
-            generateDialog(".csv");
-            if (fDialog.ShowDialog() == DialogResult.OK)
+            GenerateDialog(".csv");
+            if (_fDialog.ShowDialog() == DialogResult.OK)
             {
-                fDialog.InitialDirectory = GetDirectory(fDialog.FileName);
-                csvLocation = fDialog.FileName;
-                textTarget.Text = csvLocation;
+                _fDialog.InitialDirectory = GetDirectory(_fDialog.FileName);
+                _csvLocation = _fDialog.FileName;
+                textTarget.Text = _csvLocation;
 
-                if (outputLocation.Equals(""))
+                if (_outputLocation.Equals(""))
                 {
-                    outputLocation = GetDirectory(fDialog.FileName) + "output.txt";
-                    textOutput.Text = outputLocation;
+                    _outputLocation = GetDirectory(_fDialog.InitialDirectory) + "output.txt";
+                    textOutput.Text = _outputLocation;
                 }
 
-                fDialog.FileName = "";
+                _fDialog.FileName = "";
             }
 
-            buttonCreateOutput.Enabled = (csvLocation.Length > 0);
+            buttonCreateOutput.Enabled = (_csvLocation.Length > 0);
         }
 
         private void buttonWishlist_Click(object sender, EventArgs e)
         {
-            generateDialog(".txt");
-            if (fDialog.ShowDialog() == DialogResult.OK)
-            {
-                fDialog.InitialDirectory = GetDirectory(fDialog.FileName);
-                wishlistLocation = fDialog.FileName;
-                textWishlist.Text = wishlistLocation;
-                fDialog.FileName = "";
-            }
+            GenerateDialog(".txt");
+            if (_fDialog.ShowDialog() != DialogResult.OK) return;
+            _fDialog.InitialDirectory = GetDirectory(_fDialog.FileName);
+            _wishlistLocation = _fDialog.FileName;
+            textWishlist.Text = _wishlistLocation;
+            _fDialog.FileName = "";
         }
 
         private void buttonOutput_Click(object sender, EventArgs e)
         {
-            generateDialog(".txt");
-            if (fDialog.ShowDialog() == DialogResult.OK)
-            {
-                fDialog.InitialDirectory = GetDirectory(fDialog.FileName);
-                outputLocation = fDialog.FileName;
-                textOutput.Text = outputLocation;
-                fDialog.FileName = "";
-            }
+            GenerateDialog(".txt");
+            if (_fDialog.ShowDialog() != DialogResult.OK) return;
+            _fDialog.InitialDirectory = GetDirectory(_fDialog.FileName);
+            _outputLocation = _fDialog.FileName;
+            textOutput.Text = _outputLocation;
+            _fDialog.FileName = "";
         }
 
-        string GetDirectory(string input)
+        private static string GetDirectory(string input)
         {
-            string output = "";
-            string[] array = input.Split('\\');
-            for (int i = 0; i < array.Length - 1; i++)
+            var output = "";
+            var array = input.Split('\\');
+            for (var i = 0; i < array.Length - 1; i++)
             {
                 output += array[i] + "\\";
             }
             return output;
         }
 
-        void generateDialog(string acceptedType)
+        private void GenerateDialog(string acceptedType)
         {
-            if (fDialog == null)
+            if (_fDialog == null)
             {
-                fDialog = new OpenFileDialog();
-                fDialog.InitialDirectory = Environment.CurrentDirectory;
-                fDialog.Multiselect = false;
-                fDialog.RestoreDirectory = true;
+                _fDialog = new OpenFileDialog
+                {
+                    InitialDirectory = Environment.CurrentDirectory,
+                    Multiselect = false,
+                    RestoreDirectory = true
+                };
             }
-            string filterType = (acceptedType.Equals(".txt")) ? "Text Document|*.txt" : "CSV File|*.csv";
-            fDialog.Filter = filterType;
+            var filterType = (acceptedType.Equals(".txt")) ? "Text Document|*.txt" : "CSV File|*.csv";
+            _fDialog.Filter = filterType;
         }
 
-        void GenerateCardReader()
+        private void GenerateCardReader()
         {
-            reader = null;
-            if (outputLocation == "")
-                outputLocation = fDialog.InitialDirectory + "/output.txt";
-            if (gainMultiplier != 0.0 && uStoAUDMultiplier != 0.0)
-                reader = new CardReader(csvLocation, wishlistLocation, outputLocation, gainMultiplier, uStoAUDMultiplier, minValue, maxValue, nearestHalf);
-            reader.useMyPrice = useMyPrice;
+            _reader = null;
+            if (_outputLocation == "")
+                _outputLocation = _fDialog.InitialDirectory + "/output.txt";
+                _reader = new CardReader(_csvLocation, _wishlistLocation, _outputLocation, _gainMultiplier, _uStoAudMultiplier, _minValue, _maxValue, _nearestHalf);
+            if (_reader != null)
+                _reader.UseMyPrice = _useMyPrice;
         }
 
         private void boolMyPrice_CheckedChanged(object sender, EventArgs e)
         {
-            useMyPrice = boolMyPrice.Checked;
+            _useMyPrice = boolMyPrice.Checked;
         }
 
 
-        public void ParseGains()
+        public bool ParseGains()
         {
-            if (!Double.TryParse(textGains.Text, out gainMultiplier))
-            {
-                MessageBox.Show("Gain Multiplier is not a number, please type an integer or decimal number");
-                gainMultiplier = 0.0;
-            }
+            return double.TryParse(textGains.Text, out _gainMultiplier);
         }
 
-        public void ParseConversionRate()
+        public bool ParseConversionRate()
         {
-            if (!Double.TryParse(textUSMultiplier.Text, out uStoAUDMultiplier))
-            {
-                MessageBox.Show("Conversion Rate is not a number, please type an integer or decimal number");
-                uStoAUDMultiplier = 0.0;
-            }
+            return double.TryParse(textUSMultiplier.Text, out _uStoAudMultiplier);
         }
 
         private void textGains_TextChanged(object sender, EventArgs e)
         {
-            ParseGains();
+            CheckRequirements();
         }
 
         private void textUSMultiplier_TextChanged(object sender, EventArgs e)
         {
-            ParseConversionRate();
+            CheckRequirements();
         }
 
         private void buttonCreateOutput_Click(object sender, EventArgs e)
         {
-            if (csvLocation.Length > 0)
+            if (_csvLocation.Length > 0)
             {
                 GenerateCardReader();
-                if (!reader.ReadFile())
+                if (!_reader.ReadFile())
                 {
-                    MessageBox.Show(reader.error);
+                    MessageBox.Show(_reader.Error);
                 } else
                 {
-                    reader.PrintCards();
-                    if (outputLocation.Length > 0 && boolOpenFile.Checked)
-                        Process.Start(outputLocation);
-                    textTotalValue.Text = "$" + Math.Round(reader.totalValue, 2);
+                    _reader.PrintCards();
+                    if (_outputLocation.Length > 0 && boolOpenFile.Checked)
+                        Process.Start(_outputLocation);
+                    textTotalValue.Text = @"$" + Math.Round(_reader.TotalValue, 2);
                 }
             } else
             {
-                MessageBox.Show("Please ensure a DeckBox File is set");
+                MessageBox.Show(@"Please ensure a DeckBox File is set");
             }
         }
 
         private void textRangeMin_TextChanged(object sender, EventArgs e)
         {
-            double tempValue = minValue;
-            if (!Double.TryParse(textRangeMin.Text, out tempValue))
-            {
-                MessageBox.Show("Conversion Rate is not a number, please type an integer or decimal number");
-            } else if (tempValue < maxValue)
-            {
-                minValue = tempValue;
-            } else
-            {
-                MessageBox.Show("Minimum Value must be lower than Maximum Value");
-            }
+            CheckRequirements();
         }
 
         private void textRangeMax_TextChanged(object sender, EventArgs e)
         {
-            double tempValue = maxValue;
-            if (!Double.TryParse(textRangeMax.Text, out tempValue))
-            {
-                MessageBox.Show("Conversion Rate is not a number, please type an integer or decimal number");
-            } else if (tempValue > minValue)
-            {
-                maxValue = tempValue;
-            } else
-            {
-                MessageBox.Show("Maximum Value must be higher than Minimum Value");
-            }
+            CheckRequirements();
         }
 
         private void boolNearestFifty_CheckedChanged(object sender, EventArgs e)
         {
-            nearestHalf = boolNearestFifty.Checked;
+            _nearestHalf = boolNearestFifty.Checked;
+        }
+
+        private void CheckRequirements()
+        {
+            var isReady = true;
+            if (!CheckRangeMax())
+                isReady = false;
+            else if (!CheckRangeMin())
+                isReady = false;
+            else if (!ParseConversionRate())
+                isReady = false;
+            else if (!ParseGains())
+                isReady = false;
+
+            buttonCreateOutput.Enabled = isReady;
+        }
+
+        private bool CheckRangeMax()
+        {
+            double tempValue;
+            if (!double.TryParse(textRangeMax.Text, out tempValue))
+            {
+                MessageBox.Show(@"Conversion Rate is not a number, please type an integer or decimal number");
+                return false;
+            }
+            else if (tempValue <= _minValue)
+            {
+                MessageBox.Show(@"Maximum Value must be higher than Minimum Value");
+                return false;
+            }
+            _maxValue = tempValue;
+            return true;
+        }
+
+        private bool CheckRangeMin()
+        {
+            double tempValue;
+            if (!double.TryParse(textRangeMin.Text, out tempValue))
+            {
+                MessageBox.Show(@"Conversion Rate is not a number, please type an integer or decimal number");
+                return false;
+            }
+            else if (tempValue >= _maxValue)
+            {
+                MessageBox.Show(@"Minimum Value must be lower than Maximum Value");
+                return false;
+            }
+            _minValue = tempValue;
+            return true;
         }
     }
 }

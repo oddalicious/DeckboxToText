@@ -15,77 +15,78 @@ using System.Linq;
 using System.IO;
 using System.Text.RegularExpressions;
 
+
 namespace WindowsFormsApplication1
 {
-    class CardReader
+    internal class CardReader
     {
-        public string error;
-        public string output;
-        public bool useMyPrice;
-        public double totalValue = 0.0;
+        public string Error;
+        public string Output;
+        public bool UseMyPrice;
+        public double TotalValue;
 
-        private List<Card> cards;
-        private bool nearestHalf;
-        private string headers;
-        private string wishlistLocation = "", outputLocation = "", csvLocation = "";
-        private double percentMultiplier = 1.0, UStoAUDMultiplier = 1.3, minValue = 0.0, maxValue = 9999.00;
+        private List<Card> _cards;
+        private readonly bool _nearestHalf;
+        private readonly string[] _headers = { "Count", "Name", "Edition", "Condition", "Language", "Foil", "My Price", "Price", "Card Number" };
+        public string WishListLocation { get; }
+        private readonly string _outputLocation;
+        private readonly string _csvLocation;
+        private readonly double _percentMultiplier;
+        private readonly double _uStoAudMultiplier;
+        private readonly double _minValue;
+        private readonly double _maxValue;
 
-        public CardReader(string _csvLocation, string _wishListLocation, string _outputLocation, double _percentMultiplier = 1.0, double _UStoAUDMultiplier = 1.0, double _minValue = 0.25, double _maxValue = 9999.00, bool _nearestHalf = false)
+        public CardReader(string csvLocation, string wishListLocation, string outputLocation, double percentMultiplier = 1.0, double uStoAudMultiplier = 1.0, double minValue = 0.25, double maxValue = 9999.00, bool nearestHalf = false)
         {
-            csvLocation = _csvLocation;
-            wishlistLocation = _wishListLocation;
-            outputLocation = _outputLocation;
-            percentMultiplier = _percentMultiplier;
-            UStoAUDMultiplier = _UStoAUDMultiplier;
-            output = "";
-            error = "";
-            cards = new List<Card>();
-            minValue = _minValue;
-            maxValue = _maxValue;
-            nearestHalf = _nearestHalf;
+            _csvLocation = csvLocation;
+            WishListLocation = wishListLocation;
+            _outputLocation = outputLocation;
+            _percentMultiplier = percentMultiplier;
+            _uStoAudMultiplier = uStoAudMultiplier;
+            Output = "";
+            Error = "";
+            _cards = new List<Card>();
+            _minValue = minValue;
+            _maxValue = maxValue;
+            _nearestHalf = nearestHalf;
         }
 
         public bool ReadFile()
         {
-            totalValue = 0.0;
-            string[] headers;
+            TotalValue = 0.0;
             string[] fileList;
-            Dictionary<string, List<string>> lines = new Dictionary<string, List<String>>();
 
-            if (!File.Exists(csvLocation))
+            if (!File.Exists(_csvLocation))
             {
-                error += "File does not exist at: " + csvLocation + "\n";
+                Error += "File does not exist at: " + _csvLocation + "\n";
                 return false;
             }
 
-            if (wishlistLocation.Length > 0)
+            if (WishListLocation.Length > 0)
             {
-                if (!File.Exists(wishlistLocation))
+                if (!File.Exists(WishListLocation))
                 {
-                    error += "Wishlist does not exist at: " + wishlistLocation + "\n";
+                    Error += "Wishlist does not exist at: " + WishListLocation + "\n";
                     return false;
                 }
             }
             
             try
             {
-                fileList = File.ReadAllLines(csvLocation);
+                fileList = File.ReadAllLines(_csvLocation);
             }
             catch (Exception e)
             {
-                error += "Error has occured opening the CSV";
+                Error += "Error has occured opening the CSV";
                 return false;
             }
 
-            headers = Regex.Split(fileList[0], ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+            var tempHeaders = Regex.Split(fileList[0], ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
             //Add the headings and their related Lists
-            for (int i = 0; i < headers.Length; i++)
-            {
-                lines.Add(headers[i], new List<string>());
-            }
+            var lines = tempHeaders.Where(t => _headers.Contains(t)).ToDictionary(t => t, t => new List<string>());
             //Populate the lists
             //For each Item - Begin at 1 to prevent headings being included
-            for (int i = 1; i < fileList.Length; i++)
+            for (var i = 1; i < fileList.Length; i++)
             {
                 //Split the item into Columns
                 string[] splitLine = Regex.Split(fileList[i], ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
@@ -94,8 +95,9 @@ namespace WindowsFormsApplication1
                 //Add the relevant item to the heading (ASSUMING THEY ARE ALL THE SAME LENGTH)
                 for (int dictIndex = 0; dictIndex < splitLine.Length; dictIndex++)
                 {
+                    if (_headers.Contains(tempHeaders[dictIndex]))
                     //Get the headings string to minimise shenanigans
-                    lines[headers[dictIndex]].Add(splitLine[dictIndex]);
+                    lines[tempHeaders[dictIndex]].Add(splitLine[dictIndex]);
                 }
             }
 
@@ -105,133 +107,124 @@ namespace WindowsFormsApplication1
                 return false;
             }
 
-            for (int i = 0; i < lines[headers[0]].Count; i++)
+            for (var i = 0; i < lines[_headers[0]].Count; i++)
             {
-                Card c = new Card(lines["Count"][i], lines["Name"][i], lines["Edition"][i], lines["Condition"][i], lines["Language"][i], lines["Foil"][i], useMyPrice ? lines["My Price"][i] : lines["Price"][i], UStoAUDMultiplier, percentMultiplier, useMyPrice, nearestHalf);
-                if (c.PriceAU >= minValue && c.PriceAU < maxValue)
-                {
-                    totalValue += c.PriceAU;
-                    cards.Add(c);
-                }
+                var c = new Card(lines[_headers[0]][i], lines[_headers[1]][i], lines[_headers[2]][i], lines[_headers[3]][i], lines[_headers[4]][i], lines[_headers[5]][i], UseMyPrice ? lines[_headers[6]][i] : lines[_headers[7]][i], _uStoAudMultiplier, _percentMultiplier, UseMyPrice, _nearestHalf, lines[_headers[8]][i]);
+                if (!(c.PriceAus >= _minValue) || !(c.PriceAus < _maxValue)) continue;
+                TotalValue += c.TotalPriceAus;
+                _cards.Add(c);
             }
 
             //Order the cards by price, descending
-            cards = cards.Where(n => n.PriceAU > 0.0).ToList();
-            cards = cards.OrderByDescending(n => n.PriceAU).ToList();
+            _cards = _cards.Where(n => n.PriceAus > 0.0).ToList();
+            _cards = _cards.OrderByDescending(n => n.PriceAus).ToList();
             return true;
         }
 
         public bool PrintCards()
         {
             StreamWriter sw = null;
-            double value = 0.0;
-            bool completed = true;
+            var completed = true;
 
             try
             {
                 //Why update when you can just nuke and rebuild?
-                if (File.Exists(outputLocation))
-                    File.Delete(outputLocation);
+                if (File.Exists(_outputLocation))
+                    File.Delete(_outputLocation);
 
                 //Add the Wishlist if it exists
-                if (wishlistLocation != "" && File.Exists(wishlistLocation))
+                if (WishListLocation != "" && File.Exists(WishListLocation))
                     AppendWishlist();
 
                 //So they know that this is what we're selling
-                output += "WTS/WTT\n";
+                Output += "WTS/WTT\n";
 
                 //Loop through and add the additional cards
-                foreach (Card c in cards)
+                foreach (var c in _cards)
                 {
-                    if (c.PriceAU > minValue)
+                    if (c.PriceAus > _minValue)
                     {
-                        value += c.PriceAU;
-                        output += c.ToString() + "\n";
+                        Output += c + "\n";
                     }
                 }
 
                 //Open and write to the output file
-                sw = new StreamWriter(outputLocation);
-                sw.WriteLine(output);
+                sw = new StreamWriter(_outputLocation);
+                sw.WriteLine(Output);
             } catch (Exception e)
             {
                 completed = false;
-                error += "Failed to write to file";
+                Error += "Failed to write to file";
                 Console.WriteLine(e.ToString());
             } finally
             {
-                if (sw != null)
-                    sw.Close();
+                sw?.Close();
             }
             return completed;
         }
 
-        private bool AppendWishlist()
+        private void AppendWishlist()
         {
-            bool completed = true;
             StreamReader sr = null;
 
             try
             {
-                sr = new StreamReader(wishlistLocation);
+                sr = new StreamReader(WishListLocation);
                 while (!sr.EndOfStream)
                 {
-                    output += sr.ReadLine() + "\n";
+                    Output += sr.ReadLine() + "\n";
                 }
-                output += "\n\n";
+                Output += "\n\n";
             } catch (Exception e)
             {
-                error += "Error occured appending wishlist: ";
-                error += e.ToString();
-                completed = false;
+                Error += "Error occured appending wishlist: ";
+                Error += e.ToString();
             } finally
             {
-                if (sr != null)
-                    sr.Close();
+                sr?.Close();
             }
-            return completed;
         }
 
         private bool ParseHeadings(Dictionary<string,List<String>> cardList)
         {
             if (cardList["Count"] == null)
             {
-                error += "Count Column not assigned \n";
+                Error += "Count Column not assigned \n";
                 return false;
             } 
             if (cardList["Name"] == null)
             {
-                error += "Name Column not assigned \n";
+                Error += "Name Column not assigned \n";
                 return false;
             }
             if (cardList["Foil"] == null)
             {
-                error += "Foil Column not assigned \n";
+                Error += "Foil Column not assigned \n";
                 return false;
             }
-            if (cardList["My Price"] == null && useMyPrice)
+            if (cardList["My Price"] == null && UseMyPrice)
             {
-                error += "My Price Column not assigned \n";
+                Error += "My Price Column not assigned \n";
                 return false;
             }
             if (cardList["Price"] == null)
             {
-                error += "Price Column not assigned \n";
+                Error += "Price Column not assigned \n";
                 return false;
             }
             if (cardList["Edition"] == null)
             {
-                error += "Edition Column not assigned \n";      
+                Error += "Edition Column not assigned \n";      
                 return false;
             }
             if (cardList["Language"] == null)
             {
-                error += "Language Column not assigned \n";
+                Error += "Language Column not assigned \n";
                 return false;
             }
             if (cardList["Condition"] == null)
             {
-                error += "Condition Column not assigned \n";
+                Error += "Condition Column not assigned \n";
                 return false;
             }
             return true;
